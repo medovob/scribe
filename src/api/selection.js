@@ -10,7 +10,7 @@ function (elementHelper) {
      * Wrapper for object holding currently selected text.
      */
     function Selection() {
-      this.selection = window.getSelection();
+      this.selection = scribe.targetWindow.getSelection();
 
       if (this.selection.rangeCount) {
         this.range = this.selection.getRangeAt(0);
@@ -33,8 +33,31 @@ function (elementHelper) {
 
     Selection.prototype.placeMarkers = function () {
       var range = this.range;
-      if (!range) {
-        return;
+
+      if(!range) { return; }
+
+      var startMarker = scribe.targetDocument.createElement('em');
+      startMarker.classList.add('scribe-marker');
+      var endMarker = scribe.targetDocument.createElement('em');
+      endMarker.classList.add('scribe-marker');
+
+      // End marker
+      var rangeEnd = this.range.cloneRange();
+      rangeEnd.collapse(false);
+      rangeEnd.insertNode(endMarker);
+
+      /**
+       * Chrome and Firefox: `Range.insertNode` inserts a bogus text node after
+       * the inserted element. We just remove it. This in turn creates several
+       * bugs when perfoming commands on selections that contain an empty text
+       * node (`removeFormat`, `unlink`).
+       * As per: http://jsbin.com/hajim/5/edit?js,console,output
+       */
+      // TODO: abstract into polyfill for `Range.insertNode`
+      if (endMarker.nextSibling &&
+          endMarker.nextSibling.nodeType === Node.TEXT_NODE
+          && endMarker.nextSibling.data === '') {
+        endMarker.parentNode.removeChild(endMarker.nextSibling);
       }
 
       //we need to ensure that the scribe's element lives within the current document to avoid errors with the range comparison (see below)
@@ -194,7 +217,7 @@ function (elementHelper) {
         return;
       }
 
-      var newRange = document.createRange();
+      var newRange = scribe.targetDocument.createRange();
 
       newRange.setStartBefore(markers[0]);
       if (markers.length >= 2) {
@@ -217,7 +240,7 @@ function (elementHelper) {
       // return true if nested inline tags ultimately just contain <br> or ""
       function isEmptyInlineElement(node) {
 
-        var treeWalker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT);
+        var treeWalker = scribe.targetDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT);
 
         var currentNode = treeWalker.root;
 
