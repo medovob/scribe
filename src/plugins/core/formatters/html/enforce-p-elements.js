@@ -58,6 +58,9 @@ define([
       nodes.forEach(function (node) {
         pElement.appendChild(node);
       });
+      if(pElement.innerHTML.trim() === "") {
+        pElement.parentNode.removeChild(pElement)
+      }
     });
 
     parentNode._isWrapped = true;
