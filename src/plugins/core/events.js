@@ -10,6 +10,7 @@ define([
 
   return function () {
     return function (scribe) {
+      scribe.cleanPastedHTML = function(html) {return html}
       /**
        * Push the first history item when the editor is focused.
        */
@@ -219,7 +220,7 @@ define([
 
           if (contains(event.clipboardData.types, 'text/html')) {
 
-            scribe.insertHTML(event.clipboardData.getData('text/html'));
+            scribe.insertHTML(scribe.cleanPastedHTML(event.clipboardData.getData('text/html')));
           } else {
             scribe.insertPlainText(event.clipboardData.getData('text/plain'));
           }
@@ -265,7 +266,7 @@ define([
              */
             scribe.el.focus();
 
-            scribe.insertHTML(data);
+            scribe.insertHTML(scribe.cleanPastedHTML(data));
           }, 1);
         }
       });
